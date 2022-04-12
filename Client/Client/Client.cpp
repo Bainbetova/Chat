@@ -4,6 +4,7 @@
 #include <iostream>
 #pragma comment(lib, "ws2_32.lib")
 #include <WinSock2.h>
+#include <string>
 
 #pragma warning(disable: 4996)
 
@@ -12,10 +13,14 @@ constexpr auto SIZE_MSG = 256;
 SOCKET Connection;
 
 void ClientHandler() {
-	char msg[SIZE_MSG];
+	int msgSize;
 	while (true) {
-		recv(Connection, msg, sizeof(msg), NULL);
+		recv(Connection, (char*)&msgSize, sizeof(int), NULL);
+		char* msg = new char[msgSize + 1];
+		msg[msgSize] = '\0';
+		recv(Connection, msg, msgSize, NULL);
 		std::cout << msg << std::endl;
+		delete[] msg;
 	}
 }
 
@@ -44,10 +49,12 @@ int main(int argc, char* argv[]) {
 
 	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientHandler, NULL, NULL, NULL);
 
-	char receivedMsg[SIZE_MSG];
+	std::string receivedMsg;
 	while (true) {
-		std::cin.getline(receivedMsg, sizeof(receivedMsg));
-		send(Connection, receivedMsg, sizeof(receivedMsg), NULL);
+		std::getline(std::cin, receivedMsg);
+		int receiveMsgSize = receivedMsg.size();
+		send(Connection, (char*)&receiveMsgSize, sizeof(int), NULL);
+		send(Connection, receivedMsg.c_str(), receiveMsgSize, NULL);
 		Sleep(10);
 	}
 

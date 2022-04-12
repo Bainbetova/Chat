@@ -1,2 +1,3 @@
 ﻿  Client.cpp
-  Client.vcxproj -> C:\Users\Владлена\source\repos\Client\x64\Debug\Client.exe
+C:\Users\Владлена\source\repos\Chat\Client\Client\Client.cpp(55,42): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+  Client.vcxproj -> C:\Users\Владлена\source\repos\Chat\Client\x64\Debug\Client.exe

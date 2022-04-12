@@ -12,18 +12,24 @@ constexpr auto SIZE_MSG = 256;
 SOCKET Connections[MAX_NUMBER_OF_CONNECTIONS]; // соединения
 int Counter = 0; // индекс соединения
 
-void ClientHandler(int index) {
-	char msg[SIZE_MSG];
+void ClientHandler(int index) {	
+	int msgSize = 0;
 	while (true) {
+		// прием размера строки
+		recv(Connections[index], (char*)&msgSize, sizeof(int), NULL);
+		char *msg = new char[msgSize + 1];
+		msg[msgSize] = '\0';
 		// прием сообщения клиентов
-		recv(Connections[index], msg, sizeof(msg), NULL);
+		recv(Connections[index], msg, msgSize, NULL);
 		// отправляем принятое сообщение всем соеднинениям, кроме того, который послал это сообщение
 		for (int i = 0; i < Counter; i++) {
 			if (i == index) {
 				continue;
 			}
-			send(Connections[i], msg, sizeof(msg), NULL);
+			send(Connections[i], (char*)&msgSize, sizeof(int), NULL);
+			send(Connections[i], msg, msgSize, NULL);
 		}
+		delete[] msg;
 	}
 }
 
@@ -57,8 +63,10 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			std::cout << "Client Connected.\n";
-			char msg[SIZE_MSG] = "Hello.";
-			send(newConnection, msg, sizeof(msg), NULL);
+			std::string msg = "Hello.";
+			int msgSize = msg.size();
+			send(newConnection, (char*)&msgSize, sizeof(int), NULL);
+			send(newConnection, msg.c_str(), msgSize, NULL);
 
 			Connections[i] = newConnection;
 			Counter++;
