@@ -3,6 +3,7 @@
 
 #include <iostream>
 #pragma comment(lib, "ws2_32.lib")
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 
 #pragma warning(disable: 4996)
@@ -12,12 +13,20 @@ constexpr auto SIZE_MSG = 256;
 SOCKET Connections[MAX_NUMBER_OF_CONNECTIONS]; // соединения
 int Counter = 0; // индекс соединения
 
-void ClientHandler(int index) {	
+// тип пакета
+enum Packet {
+	PChatMessage,
+	PTest
+};
+
+bool ProcessPacket(int index, Packet packettype) {
 	int msgSize = 0;
-	while (true) {
+	switch (packettype) {
+	case PChatMessage:
+	{
 		// прием размера строки
 		recv(Connections[index], (char*)&msgSize, sizeof(int), NULL);
-		char *msg = new char[msgSize + 1];
+		char* msg = new char[msgSize + 1];
 		msg[msgSize] = '\0';
 		// прием сообщения клиентов
 		recv(Connections[index], msg, msgSize, NULL);
@@ -26,11 +35,30 @@ void ClientHandler(int index) {
 			if (i == index) {
 				continue;
 			}
+			Packet msgtype = PChatMessage;
+			send(Connections[i], (char*)&msgtype, sizeof(Packet), NULL);
 			send(Connections[i], (char*)&msgSize, sizeof(int), NULL);
 			send(Connections[i], msg, msgSize, NULL);
 		}
 		delete[] msg;
+		break;
 	}
+	default:
+		std::cout << "Unrecording packet: " << packettype << std::endl;
+		break;
+	}
+	return true;
+}
+
+void ClientHandler(int index) {	
+	Packet packettype;
+	while (true) {
+		recv(Connections[index], (char*)&packettype, sizeof(Packet), NULL);
+		if (!ProcessPacket(index, packettype)) {
+			break;
+		}
+	}
+	closesocket(Connections[index]);
 }
 
 int main(int argc, char* argv[]) {
@@ -65,12 +93,17 @@ int main(int argc, char* argv[]) {
 			std::cout << "Client Connected.\n";
 			std::string msg = "Hello.";
 			int msgSize = msg.size();
+			Packet msgtype = PChatMessage;
+			send(newConnection, (char*)&msgtype, sizeof(Packet), NULL);
 			send(newConnection, (char*)&msgSize, sizeof(int), NULL);
 			send(newConnection, msg.c_str(), msgSize, NULL);
 
 			Connections[i] = newConnection;
 			Counter++;
 			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientHandler, (LPVOID)i, NULL, NULL);
+		
+			Packet testpacket = PTest;
+			send(newConnection, (char*)&testpacket, sizeof(Packet), NULL);
 		}
 	}
 

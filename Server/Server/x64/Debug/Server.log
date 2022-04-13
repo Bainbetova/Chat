@@ -1,4 +1,4 @@
 ﻿  Server.cpp
-C:\Users\Владлена\source\repos\Chat\Server\Server\Server.cpp(67,28): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-C:\Users\Владлена\source\repos\Chat\Server\Server\Server.cpp(73,77): warning C4312: приведение типов: преобразование из "int" в "LPVOID" большего размера
+C:\Users\Владлена\source\repos\Chat\Server\Server\Server.cpp(95,28): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\Владлена\source\repos\Chat\Server\Server\Server.cpp(103,77): warning C4312: приведение типов: преобразование из "int" в "LPVOID" большего размера
   Server.vcxproj -> C:\Users\Владлена\source\repos\Chat\Server\x64\Debug\Server.exe

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #pragma comment(lib, "ws2_32.lib")
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 #include <string>
 
@@ -12,16 +13,46 @@ constexpr auto SIZE_MSG = 256;
 
 SOCKET Connection;
 
-void ClientHandler() {
-	int msgSize;
-	while (true) {
+// типы пакета
+enum Packet {
+	PChatMessage,
+	PTest
+};
+
+// обработка приходящих пакетов
+bool ProccessPacket(Packet packettype) {
+	switch (packettype) {
+	case PChatMessage: {
+		int msgSize;
 		recv(Connection, (char*)&msgSize, sizeof(int), NULL);
 		char* msg = new char[msgSize + 1];
 		msg[msgSize] = '\0';
 		recv(Connection, msg, msgSize, NULL);
 		std::cout << msg << std::endl;
 		delete[] msg;
+		break;
 	}
+	case PTest: {
+		std::cout << "test packet\n";
+		break;
+	}
+	default:
+		std::cout << "Unrecognized packet: " << packettype << std::endl;
+		break;
+	}
+	return true;
+}
+
+void ClientHandler() {
+	Packet packettype;
+	while (true) {
+		recv(Connection, (char*)&packettype, sizeof(Packet), NULL);
+
+		if (!ProccessPacket(packettype)) {
+			break;
+		}
+	}
+	closesocket(Connection);
 }
 
 int main(int argc, char* argv[]) {
@@ -53,6 +84,8 @@ int main(int argc, char* argv[]) {
 	while (true) {
 		std::getline(std::cin, receivedMsg);
 		int receiveMsgSize = receivedMsg.size();
+		Packet packettype = PChatMessage;
+		send(Connection, (char*)&packettype, sizeof(Packet), NULL);
 		send(Connection, (char*)&receiveMsgSize, sizeof(int), NULL);
 		send(Connection, receivedMsg.c_str(), receiveMsgSize, NULL);
 		Sleep(10);
